@@ -1,0 +1,6 @@
+[
+  "tests/test_api.py::test_flow",
+  "tests/test_engine.py::test_clean_style",
+  "tests/test_engine.py::test_handle",
+  "tests/test_engine.py::test_pipeline"
+]

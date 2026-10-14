@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Matrixify Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">Matrixify Studio<small>SAP cleaning and Shopify import builder</small></span>
+  <span class="sp"></span>
+  <span class="pill" id="profilePill">Unsaved settings</span>
+  <span class="pill" id="runPill">Idle</span>
+</div>
+
+<div class="shell">
+<aside class="rail">
+  <div class="rail-scroll">
+
+    <details open><summary>Data sources</summary><div class="body">
+      <label class="drop" data-drop="template"><input type="file" accept=".xlsx"><b>Matrixify template</b><span class="sub">.xlsx, required</span><div class="files"></div></label>
+      <label class="drop" data-drop="copy"><input type="file" accept=".xlsx" multiple><b>Copy decks</b><span class="sub">.xlsx, one or more</span><div class="files"></div></label>
+      <label class="drop" data-drop="sap"><input type="file" accept=".xlsx,.csv"><b>SAP / primary data</b><span class="sub">.xlsx or .csv</span><div class="files"></div></label>
+      <label class="drop" data-drop="image"><input type="file" accept=".xlsx,.csv"><b>Image export</b><span class="sub">.xlsx or .csv, optional</span><div class="files"></div></label>
+    </div></details>
+
+    <details open><summary>Master style cleanup</summary><div class="body">
+      <div class="field"><label for="sc-mode">Trailing suffix removal</label>
+        <select id="sc-mode" data-k="style_cleanup.mode">
+          <option value="smart">Smart (recommended)</option>
+          <option value="legacy">Always drop last character</option>
+          <option value="fixed">Drop a fixed number of characters</option>
+          <option value="regex">Custom pattern (regex)</option>
+          <option value="off">Off</option>
+        </select>
+        <p class="hint" id="sc-hint"></p></div>
+      <div class="field" data-show-mode="fixed"><label for="sc-count">Characters to drop</label><input id="sc-count" type="number" min="1" max="10" data-k="style_cleanup.count" data-type="int"></div>
+      <div class="field" data-show-mode="regex"><label for="sc-pat">Pattern removed from the code</label><input id="sc-pat" type="text" data-k="style_cleanup.pattern" spellcheck="false" class="mono"></div>
+    </div></details>
+
+    <details open><summary>Handle builder</summary><div class="body">
+      <label class="check"><input type="checkbox" data-k="handle.enabled"><span>Generate handles<small>Fills the template Handle column.</small></span></label>
+      <div class="field"><label for="h-pat">Pattern</label><input id="h-pat" type="text" data-k="handle.pattern" spellcheck="false" class="mono">
+        <p class="hint">Tokens: {title} {parent_sku} {masterstyle} {variant_sku}</p></div>
+      <div class="field"><label for="h-src">Parent SKU source</label><select id="h-src" data-k="handle.parent_sku_source"><option value="auto">Auto-detect</option></select>
+        <p class="hint">Auto uses a mapped Parent SKU column, then the master style.</p></div>
+      <div class="row2">
+        <div class="field"><label for="h-case">Parent SKU case</label><select id="h-case" data-k="handle.sku_case"><option value="keep">Keep as is</option><option value="upper">UPPER</option><option value="lower">lower</option></select></div>
+        <div class="field"><label for="h-rx">Remove from SKU</label><input id="h-rx" type="text" data-k="handle.parent_sku_strip_regex" placeholder="regex, optional" spellcheck="false" class="mono"></div>
+      </div>
+      <label class="check"><input type="checkbox" data-k="handle.vn_to_van"><span>Convert VN prefix to VAN</span></label>
+      <label class="check"><input type="checkbox" data-k="handle.overwrite_existing"><span>Overwrite handles from copy decks</span></label>
+    </div></details>
+
+    <details><summary>Content and sizing</summary><div class="body">
+      <label class="check"><input type="checkbox" data-k="repair_html"><span>Repair HTML body tags<small>Wraps text in paragraph tags when missing.</small></span></label>
+      <label class="check"><input type="checkbox" data-k="strip_rs_barcode"><span>Strip RS prefix from barcodes</span></label>
+      <label class="check"><input type="checkbox" data-k="normalize_sizing"><span>Normalize sizing<small>Footwear 40 to 4, 40H to 4.5; apparel 00L to L; A25 to 25.</small></span></label>
+      <label class="check"><input type="checkbox" data-k="pdp_to_list"><span>PDP details as bullet list<small>Converts pdp_details to a ul list.</small></span></label>
+    </div></details>
+
+    <details><summary>Rule tester</summary><div class="body">
+      <div class="test">
+        <div class="field"><label for="t-style">SAP master style</label><input id="t-style" type="text" value="VN000EE3BKA1" class="mono"></div>
+        <div class="field"><label for="t-title">Title</label><input id="t-title" type="text" value="Classic Slip-On Shoe"></div>
+        <div class="field"><label for="t-psku">Parent SKU (when a source column is chosen)</label><input id="t-psku" type="text" value="VAN200023027100" class="mono"></div>
+        <output id="t-out"></output>
+      </div>
+    </div></details>
+
+    <details><summary>Profiles</summary><div class="body">
+      <div class="field"><label for="p-name">Profile name</label><input id="p-name" type="text" placeholder="e.g. Vans seasonal"></div>
+      <div class="row2"><button class="btn sm" id="p-save">Save in browser</button><button class="btn sm" id="p-export">Export file</button></div>
+      <div class="field"><label for="p-list">Saved profiles</label><select id="p-list"></select></div>
+      <div class="row2"><button class="btn sm" id="p-load">Load</button><button class="btn sm" id="p-del">Delete</button></div>
+      <label class="btn sm" style="text-align:center">Import profile file<input id="p-import" type="file" accept=".json" hidden></label>
+      <p class="hint">Profiles hold settings and column mappings. Files from the earlier Streamlit version import too.</p>
+      <button class="btn sm" id="p-reset">Reset to defaults</button>
+    </div></details>
+  </div>
+
+  <div class="rail-foot">
+    <div class="ready" id="ready"></div>
+    <button class="btn primary" id="run" disabled>Run pipeline</button>
+  </div>
+</aside>
+
+<section class="main">
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="map" aria-selected="true">Column mapping</button>
+    <button class="tab" role="tab" data-tab="result" aria-selected="false">Result<span class="n" id="n-result"></span></button>
+    <button class="tab" role="tab" data-tab="audit" aria-selected="false">Audit<span class="n" id="n-audit"></span></button>
+    <button class="tab" role="tab" data-tab="store" aria-selected="false">Storefront preview</button>
+    <button class="tab" role="tab" data-tab="export" aria-selected="false">Export</button>
+  </nav>
+
+  <div class="view active" id="v-map">
+    <h2>Column mapping</h2>
+    <p class="lede">Assign each source column to a Matrixify template column. Map the SAP vendor article column to the master style field to link the SAP file, copy decks and images.</p>
+    <div id="map-root"><div class="empty"><b>Upload a Matrixify template to begin</b>The template defines the columns available for mapping.</div></div>
+  </div>
+  <div class="view" id="v-result"><div class="empty"><b>No result yet</b>Run the pipeline to preview the completed template.</div></div>
+  <div class="view" id="v-audit"><div class="empty"><b>No audit yet</b>Run the pipeline to see data quality checks.</div></div>
+  <div class="view" id="v-store"><div class="empty"><b>No products yet</b>Run the pipeline to preview products as they will appear on the storefront.</div></div>
+  <div class="view" id="v-export"><div class="empty"><b>Nothing to export yet</b>Run the pipeline first.</div></div>
+</section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script src="/app.js"></script>
+</body>
+</html>
